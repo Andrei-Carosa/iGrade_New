@@ -27,8 +27,8 @@ class StudentGrade extends Model
     ];
 
     protected $hidden = [
-        'grade_id',
-        'stud_id'
+        // 'grade_id',
+        // 'stud_id'
     ];
 
     public $timestamps = false;

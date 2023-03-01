@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 Route::get('/dashboard', function () {
@@ -36,7 +36,12 @@ Route::group(['prefix'=>'college','middleware'=>['auth','isFaculty','PreventBack
     Route::post('/my-class-fetch', [DataController::class, 'my_class_fetch'])->name('college.my_class_fetch');
 
     Route::post('/frs', [DataController::class, 'frs'])->name('college.frs');
-    Route::post('/frs-fetch', [DataController::class, 'my_class_fetch'])->name('college.frs_fetch');
+    Route::post('/frs-fetch', [DataController::class, 'frs_fetch'])->name('college.frs_fetch');
+    Route::post('/frs-student-inc', [DataController::class, 'frs_student_inc'])->name('college.frs_student_inc');
+
+    Route::post('/class-record-term', [DataController::class, 'class_record_term'])->name('college.class_record_term');
+    Route::post('/class-record-tbl', [DataController::class, 'class_record_tbl'])->name('college.class_record_tbl');
+
 
 
 

@@ -5,7 +5,6 @@
  * Copyright 2011-2021 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  */
- @import "app.scss";
 :root {
   --blue: #007bff;
   --indigo: #6610f2;
@@ -83201,7 +83200,7 @@ canvas {
   }
 }
 body {
-  background: #FFF;
+  background: #FBF6F0;
 }
 
 @media (min-width: 992px) {

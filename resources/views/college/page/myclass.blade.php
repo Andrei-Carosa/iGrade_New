@@ -4,16 +4,13 @@
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
     <!--begin::Subheader-->
     <div class="subheader py-2 py-lg-4 subheader-transparent" id="kt_subheader">
-        <div class="container d-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap">
+        <div class="container-fluid mx-20 d-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap">
             <!--begin::Details-->
             <div class="d-flex align-items-center flex-wrap mr-2">
                 <!--begin::Title-->
 
                 <div class="d-flex flex-column">
-                    <!--begin::Title-->
-                    <h5 class="text-dark font-weight-bold my-2 mr-5">My Class</h5>
-                    <!--end::Title-->
-                    <!--begin::Breadcrumb-->
+                    <h5 class="text-dark font-weight-bold my-2 mr-5" id="title">My Class</h5>
                     <div class="d-flex align-items-center font-weight-bold my-2">
                         <!--begin::Item-->
                         <span class="label label-dot label-sm bg-secondary opacity-75 mx-0"></span>
@@ -77,6 +74,12 @@
                 </div>
                 <!--end::Group Actions-->
             </div>
+            <ol class="breadcrumb text-muted fs-6 fw-semibold bg-transparent" hidden>
+                <li class="breadcrumb-item"><a href="#" class="bread-my-class">My Class</a></li>
+                <li class="breadcrumb-item"><a href="#" class="bread-frs">Final Rating Sheet</a></li>
+                {{-- <li class="breadcrumb-item text-muted bread-class-record">Class Record</li>
+                <li class="breadcrumb-item text-muted sched-type">Lecture</li> --}}
+            </ol>
             <!--end::Details-->
 
             <!--begin::Toolbar-->
@@ -165,14 +168,11 @@
     </div>
     <!--end::Subheader-->
     <!--begin::Entry-->
-    <div class="d-flex flex-column-fluid">
+    <div class="d-flex flex-column-fluid" id="display-render">
         <!--begin::Container-->
-        <div class="container">
+        <div class="container-fluid mx-20" id="hide-card">
             <!--begin::Row-->
             <div class="row" id="card-my-class">
-                <!--begin::Col-->
-
-                <!--end::Col-->
             </div>
             <!--end::Row-->
         </div>

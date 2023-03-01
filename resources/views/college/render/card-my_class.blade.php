@@ -2,7 +2,7 @@
     @if (count($class) >= 1)
 
     @foreach ($class as $classes )
-        <div class="col-xl-4 col-lg-6 col-md-6 col-sm-6">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
 
             <!--begin::Card-->
             <div class="card card-custom gutter-b card-stretch border border-secondary">

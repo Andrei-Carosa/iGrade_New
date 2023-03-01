@@ -15,13 +15,10 @@
 		<link href="{{ asset('assets/plugins/custom/prismjs/prismjs.bundle.css') }}" rel="stylesheet" type="text/css" />
 		<link href="{{ asset('assets/css/style.bundle.css') }}" rel="stylesheet" type="text/css" />
 		<link rel="shortcut icon" href="{{ asset('assets/media/logos/favicon.ico') }}" />
+		<link href="{{ asset('assets/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
 
         <style>
         </style>
-
-        @vite(['resources/css/app.scss'])
-
-
 
 	</head>
 	<body id="kt_body" class="header-fixed header-mobile-fixed page-loading">
@@ -58,11 +55,11 @@
 				<div class="d-flex flex-column flex-row-fluid wrapper" id="kt_wrapper">
 
                     <!--begin::Header-->
-					<div id="kt_header" class="header flex-column header-fixed">
+					<div id="kt_header" class="header flex-column header-fixed shadow">
 						<!--begin::Top-->
 						<div class="header-top">
 							<!--begin::Container-->
-							<div class="container">
+							<div class="container-fluid mx-20">
 								<!--begin::Left-->
 								<div class="d-none d-lg-flex align-items-center mr-3">
 									<!--begin::Logo-->
@@ -80,8 +77,8 @@
 										<div class="topbar-item" data-toggle="dropdown" data-offset="0px,0px">
 											<div class="btn btn-icon btn-hover-transparent-white w-auto d-flex align-items-center btn-lg px-2">
 												<div class="d-flex flex-column text-right pr-3">
-													<span class="text-white opacity-50 font-weight-bold font-size-sm d-none d-md-inline">Sean</span>
-													<span class="text-white font-weight-bolder font-size-sm d-none d-md-inline">UX Designer</span>
+													<span class="text-white  font-weight-bold font-size-sm d-none d-md-inline">{{ Auth::user()->emp_info->fullname }}</span>
+													<span class="text-white opacity-50 font-weight-bolder font-size-sm d-none d-md-inline">{{ Auth::user()->AccountType }}</span>
 												</div>
 												<span class="symbol symbol-35">
 													<span class="symbol-label font-size-h5 font-weight-bold text-white bg-white-o-30">S</span>
@@ -99,9 +96,9 @@
 												</div>
 												<!--end::Symbol-->
 												<!--begin::Text-->
-												<div class="text-dark m-0 flex-grow-1 mr-3 font-size-h5">Sean Stone</div>
-												<span class="label label-light-success label-lg font-weight-bold label-inline">3 messages</span>
-												<!--end::Text-->
+												<div class="text-dark m-0 flex-grow-1 mr-1 font-size-h5">{{ Auth::user()->emp_info->fullname }}</div>
+												<span class="label label-light-success label-inline label-lg font-weight-bold label-inline">{{ __('Faculty') }}</span>
+                                                <!--end::Text-->
 											</div>
 											<div class="separator separator-solid"></div>
 											<!--end::Header-->
@@ -235,7 +232,7 @@
 
 					<!--end::Content-->
 					<!--begin::Footer-->
-					{{-- <div class="footer bg-white py-4 d-flex flex-lg-column" id="kt_footer">
+					<div class="footer bg-white py-4 d-flex flex-lg-column" id="kt_footer">
 						<!--begin::Container-->
 						<div class="container d-flex flex-column flex-md-row align-items-center justify-content-between">
 							<!--begin::Copyright-->
@@ -253,7 +250,7 @@
 							<!--end::Nav-->
 						</div>
 						<!--end::Container-->
-					</div> --}}
+					</div>
 					<!--end::Footer-->
 				</div>
 				<!--end::Wrapper-->
@@ -311,6 +308,7 @@
         </script>
         <script src="{{ asset('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
         <script src="{{ asset('js/myclass.js') }}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
 		<!--end::Page Scripts-->
 	</body>
 	<!--end::Body-->
