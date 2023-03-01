@@ -32,8 +32,12 @@ class Schedule extends Model
         return $this->belongsTo(AcademicYear::class,'ay_id','ay_id');
     }
 
-    public function sched_section(){
-        return $this->hasOne(ScheduleSection::class,'sched_id','sched_id')->select(['ss_id','sched_id','section_id'])->withDefault();
+    // public function sched_section(){
+    //     return $this->hasOne(ScheduleSection::class,'sched_id','sched_id');
+    // }
+
+    public function sched_blocking(){
+        return $this->hasOne(ScheduleBlocking::class,'sched_id','sched_id')->select(['block_id','sched_id']);
     }
 
     public function sched_student(){

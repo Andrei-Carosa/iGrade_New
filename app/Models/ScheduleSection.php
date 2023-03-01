@@ -14,7 +14,7 @@ class ScheduleSection extends Model
         'ss_id',
     ];
 
-    public function sched_section(){
+    public function section(){
         return $this->belongsTo(Section::class,'section_id','section_id')->withDefault(['name' => ' -/-']);
     }
 }

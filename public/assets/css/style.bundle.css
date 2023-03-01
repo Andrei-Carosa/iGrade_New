@@ -5,6 +5,7 @@
  * Copyright 2011-2021 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  */
+ @import "app.scss";
 :root {
   --blue: #007bff;
   --indigo: #6610f2;
@@ -82324,6 +82325,8 @@ body.swal2-height-auto {
   z-index: 96;
   border-radius: 0.42rem;
 }
+
+
 .modal-open .tagify__dropdown {
   z-index: 1051;
 }

@@ -18,7 +18,6 @@ class isFaculty
     public function handle(Request $request, Closure $next)
     {
         if( Auth::check() ){
-
             //check user if active
             if(Auth::user()->admin_account){
 

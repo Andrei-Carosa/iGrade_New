@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DataController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ViewController;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,12 @@ Route::middleware('auth')->group(function () {
 Route::group(['prefix'=>'college','middleware'=>['auth','isFaculty','PreventBackHistory']], function(){
 
     Route::get('/my-class', [ViewController::class, 'my_class'])->name('college.my_class');
+    Route::post('/my-class-fetch', [DataController::class, 'my_class_fetch'])->name('college.my_class_fetch');
+
+    Route::post('/frs', [DataController::class, 'frs'])->name('college.frs');
+    Route::post('/frs-fetch', [DataController::class, 'my_class_fetch'])->name('college.frs_fetch');
+
+
 
 });
 

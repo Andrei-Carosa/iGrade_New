@@ -4,15 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Casts\EncryptCast;
 
 class ScheduleTeacher extends Model
 {
     use HasFactory;
     protected $table ="schedules_teachers";
+    protected $primaryKey = 'id';
 
     protected $hidden = [
         'id',
-        'sched_id',
+        // 'sched_id',
         // 'p_id'
     ];
 
@@ -24,12 +26,12 @@ class ScheduleTeacher extends Model
         return $this->belongsTo(Employee::class,'p_id','p_id');
     }
 
-    public function teacher_activity(){
-        return $this->hasMany(ScheduleActivity::class,'sched_id','sched_id')->select(['post_id','sched_id','title','details','type_id','is_visible','is_active','posted_at']);
+    public function sched_lms_post(){
+        return $this->hasMany(LmsPost::class,'sched_id','sched_id');
     }
 
     public function getSchedTypeAttribute(){
-        return $this->type == 1 ? 'LEC & LAB' : 'LECTURE';
+        return $this->type == 1 ? 'LEC ' : 'LECTURE';
     }
 
     public function getTeacherScheduleAttribute(){
