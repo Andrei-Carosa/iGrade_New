@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Events\ViewFRS;
+use App\Models\iGradeColumn;
+use App\Models\iGradeImport;
+use App\Models\iGradeScores;
+use App\Models\LmsPostSubmission;
 use App\Models\Schedule;
 use App\Models\ScheduleTeacher;
 use App\Models\StudentGrade;
@@ -16,48 +20,86 @@ class ViewController extends Controller
 {
     public function my_class()
     {
-        try{
 
-            // $response = $this->check_request($request);
+        $sched_id = 12970;
+        $category = 0;
 
-            // if($response != true){
-            //     return $response;
-            // }
+        $class = Schedule::with('sched_course','sched_blocking.block')->where('sched_id',$sched_id)->first(['sched_id','course_id']);
+        $stud_sched = StudentSchedule::with('stud_info')->where('sched_id',$sched_id)->get('stud_id');
+        $postId = iGradeImport::with('import_lms')->where([['sched_id',$sched_id],['category',$category]])->pluck('post_id');
+        $import = iGradeImport::with(['import_lms','import_lms_submitted'])->where([['sched_id',$sched_id],['category',$category]])->get();
+        $column = iGradeColumn::with('column_score')->where([['sched_id',$sched_id],['type',$category]])->get();
+        $column_score = iGradeScores::whereIn('col_id',$column)->get();
 
-            $sched_id = 13187;
-            $ay_id = 20;
-            $sem_id = 2;
-            $p_id = Auth::user()->p_id;
+        $student_score = array();
+        $score_column = array();
+        $score_import = array();
 
-            $class = Schedule::with('sched_course','sched_blocking.block')->where('sched_id',$sched_id)->first(['sched_id','course_id']);
+        $percent_type = $this->tab_index_percentage(0);
 
-            $stud_sched = StudentSchedule::where('sched_id',$sched_id)->pluck('stud_id');
-            $frs = StudentGrade::where([['sched_id',$sched_id],['ay_id',$ay_id],['sem_id',$sem_id]])->count();
+        if(!empty($import) || !empty($column)){
 
-            if($class) {
+            $lms_submission = LmsPostSubmission::whereIn('post_id',$postId)->get(['stud_id','score','post_id']);
 
-                if($frs == 0){
-                    event(new ViewFRS($sched_id,$ay_id,$sem_id,$stud_sched,$p_id,$class->course_id));
-                    echo 21;
+            foreach($stud_sched as $stud_key => $students){
+
+                $total_import_score = 0;
+                $total_column_score = 0;
+
+                $total_import_hps = 0;
+                $total_column_hps = 0;
+
+                $calculated_score = 0;
+
+                //import
+                foreach($import as $key_import => $imports){
+
+                    // $filtered_array = array_filter($lms_submission, function($val) use($students,$imports){
+                    //     return ($val['stud_id']==$students->stud_id and $val['post_id']==$imports->post_id);
+                    // });
+
+                    $filtered_array = $imports->import_lms_submitted->where('stud_id',$students->stud_id)->all();
+
+                    if( !empty($filtered_array) ) {
+                        foreach($filtered_array as $submission_score){
+                            echo $imports->post_id;
+                            $score_import["import_$key_import"] = $submission_score->score== null ? 0 :$submission_score->score;
+                            $total_import_score = $total_import_score+$score_import["import_$key_import"];
+                        }
+                    }else{
+                        $score_import["import_$key_import"] = 0 ;
+                    }
+
+                    $total_import_hps = $total_import_hps+ $imports->import_lms->hps;
                 }
-                echo 1;
-                // $frs = base64_encode(View::make("college.render.table-frs",compact('class'))->render());
-                // $response = Response::json(['success' =>'success','frs'=>$frs],200);
 
-            }else{
-                // $response = Response::json(['empty' =>'Something went wrong fetching FRS'],200);
-                echo 2;
+                //column
+                foreach($column as $key_column => $columns){
+
+                    if($students->stud_id == $columns->column_score->stud_id){
+                        $score_column["column_$key_column"] = $columns->column_score->score;
+                        $total_column_score = $total_column_score+$score_column["column_$key_column"];
+                    }else{
+                        $score_column["column_$key_column"] = 0;
+                    }
+
+                    $total_column_hps = $total_column_hps+$columns->column_score->hps;
+
+                }
+
+                if( ($total_import_hps != 0 || $total_column_hps !=0) ){
+                    $calculated_score = (((($total_import_score+$total_column_score) / ($total_import_hps+$total_column_hps)) * $percent_type)*100);
+                }
+
+                $student_score[$stud_key] = array('name'=> $students->stud_info->fullname,'stud_id'=> $students->stud_id,'total_score'=>$total_import_score+$total_column_score,'calculated_score'=>$calculated_score);
+                $student_score[$stud_key] = array_merge($student_score[$stud_key],$score_import);
+                $student_score[$stud_key] = array_merge($student_score[$stud_key],$score_column);
 
             }
-
-        } catch(Throwable $e){
-            echo $e->getMessage();
-            // $response = Response::json(['error' =>'Something went wrong. Try again later.'.$e->getMessage()],200);
-
         }
-return 1;
 
-        return view('college.page.myclass');
+return $student_score;
+        // return view('college.page.myclass');
 
     }
 }

@@ -42,6 +42,7 @@ Route::group(['prefix'=>'college','middleware'=>['auth','isFaculty','PreventBack
     Route::post('/class-record-term', [DataController::class, 'class_record_term'])->name('college.class_record_term');
     Route::post('/class-record-tbl', [DataController::class, 'class_record_tbl'])->name('college.class_record_tbl');
 
+    Route::post('/class-grading-sheet', [DataController::class, 'class_grading_sheet'])->name('college.class_grading_sheet');
 
 
 

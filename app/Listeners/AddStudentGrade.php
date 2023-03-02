@@ -4,8 +4,6 @@ namespace App\Listeners;
 
 use App\Events\ViewFRS;
 use App\Models\StudentGrade;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 
 class AddStudentGrade
 {
@@ -26,7 +24,6 @@ class AddStudentGrade
      */
     public function handle(ViewFRS $event)
     {
-        dd(12);
 
         $sem_id = $event->sem_id;
         $ay_id = $event->ay_id;
@@ -55,8 +52,6 @@ class AddStudentGrade
             );
 
         }
-
-        $response = StudentGrade::insert($stud_array);
-dd(1);
+        return StudentGrade::insert($stud_array);
     }
 }

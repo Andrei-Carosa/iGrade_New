@@ -54,7 +54,7 @@
                         </div>
                     </div>
                     <!--end::Info-->
-                    <a href="#" class="btn btn-block btn-sm btn-light-success font-weight-bolder text-uppercase py-4 manage-class" sched-id="{{ $classes->sched_id }}">Manage Class</a>
+                    <a href="#" class="btn btn-block btn-sm btn-light-success font-weight-bolder text-uppercase py-4 manage-class" sched-id="{{ \Crypt::encrypt($classes->sched_id) }}">Manage Class</a>
                 </div>
                 <!--end::Body-->
                 <div class="card-footer d-flex align-items-center">

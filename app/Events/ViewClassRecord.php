@@ -2,12 +2,15 @@
 
 namespace App\Events;
 
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class ViewFRS
+class ViewClassRecord
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -17,21 +20,20 @@ class ViewFRS
      * @return void
      */
     public $sched_id;
-    public $ay_id;
-    public $sem_id;
-    public $stud_sched;
+    public $term_id;
     public $p_id;
-    public $course_id;
+    public $stud_sched;
+    public $lec;
+    public $lab;
 
-    public function __construct($sched_id,$ay_id,$sem_id,$stud_sched,$p_id,$course_id)
+    public function __construct($sched_id,$term_id,$p_id,$stud_sched,$lec_grade,$lab_grade)
     {
-        
         $this->sched_id = $sched_id;
-        $this->ay_id = $ay_id;
-        $this->sem_id = $sem_id;
+        $this->term_id  = $term_id;
+        $this->p_id     = $p_id;
         $this->stud_sched = $stud_sched;
-        $this->p_id = $p_id;
-        $this->course_id = $course_id;
+        $this->lec = $lec_grade;
+        $this->lab = $lab_grade;
     }
 
     /**

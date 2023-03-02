@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Events\ViewClassRecord;
+use App\Events\ViewFRS;
+use App\Listeners\AddClassRecordGrade;
 use App\Listeners\AddStudentGrade;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -21,6 +24,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         ViewFRS::class =>[
             AddStudentGrade::class,
+        ],
+        ViewClassRecord::class=>[
+            AddClassRecordGrade::class,
         ]
     ];
 

@@ -10,7 +10,7 @@
                     </span>
                     <h3 class="card-label">
                         {{ $class->sched_course->description }}
-                        <span class="d-block text-muted pt-2 font-size-sm">{{ $class->sched_blocking->block->block_name }}</span>
+                        <span class="d-block text-muted pt-2 font-size-sm">{{ $class->sched_blocking->block->block_name }} | {{ $term }}</span>
                     </h3>
                 </div>
                 <div class="card-toolbar">
@@ -38,7 +38,7 @@
                                             <span class="navi-icon">
                                                 <i class="icon-sm flaticon-logout"></i>
                                             </span>
-                                            <span class="navi-text" data-term="1">LECTURE</span>
+                                            <span class="navi-text sched-type-btn" sched-type='0'>LECTURE</span>
                                         </a>
                                     </li>
                                 @endif
@@ -48,7 +48,7 @@
                                             <span class="navi-icon">
                                                 <i class="icon-sm flaticon-logout"></i>
                                             </span>
-                                            <span class="navi-text" data-term="2">LABORATORY</span>
+                                            <span class="navi-text sched-type-btn" sched-type='1'>LABORATORY</span>
                                         </a>
                                     </li>
                                 @endif
@@ -59,39 +59,9 @@
                     </div>
                 </div>
             </div>
-
-            <div class="card-toolbar">
-                <ul class="nav nav-tabs nav-bold nav-tabs-line pl-5">
-                    <li class="nav-item">
-                        <a class="nav-link active class-term" data-term="1" data-toggle="tab" href="#kt_tab_pane_1_4">
-                            <span class="nav-icon"><i class="flaticon2-chat-1"></i></span>
-                            <span class="nav-text">Prelim</span>
-                        </a>
-                    </li>
-                    <li class="nav-item ">
-                        <a class="nav-link class-term" data-term="2" data-toggle="tab" href="#kt_tab_pane_2_4">
-                            <span class="nav-icon"><i class="flaticon2-drop"></i></span>
-                            <span class="nav-text">Midterm</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link class-term" data-term="3" data-toggle="tab" href="#kt_tab_pane_3_4">
-                            <span class="nav-icon"><i class="flaticon2-gear"></i></span>
-                            <span class="nav-text">Finals</span>
-                        </a>
-                     </li>
-                </ul>
-            </div>
             <div class="card-body">
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="kt_tab_pane_1_4" role="tabpanel" aria-labelledby="kt_tab_pane_1_4">
-
-                    </div>
-                    <div class="tab-pane fade" id="kt_tab_pane_2_4" role="tabpanel" aria-labelledby="kt_tab_pane_2_4">
-
-                    </div>
-                    <div class="tab-pane fade" id="kt_tab_pane_3_4" role="tabpanel" aria-labelledby="kt_tab_pane_3_4">
-
                     </div>
                 </div>
             </div>

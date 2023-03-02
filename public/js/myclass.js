@@ -217,20 +217,19 @@ var TeacherClass = function(){
                         message: 'Loading your FRS ...'
                     });
                     $('#hide-card').hide();
+                    Cookies.set('param1', sched_id)
                 },
                 complete: function () {
                     KTApp.unblock('#kt_content');
-                    Cookies.set('param1', sched_id)
-                    KTDatatablesDataSourceAjaxServer.init();
                     $('.breadcrumb').removeAttr('hidden');
                     $('.bread-my-class').addClass('text-muted');
                 },
                 success: function (response) {
                     if (response.success) {
 
-                        $('#display-render').last().append(window.atob(response.frs));
-                        console.log(response)
                         $('#title').html('Final Rating Sheet');
+                        $('#display-render').last().append(window.atob(response.frs));
+                        KTDatatablesDataSourceAjaxServer.init();
 
                     } else if (response.empty) {
                         Swal.fire({
@@ -346,6 +345,7 @@ var TeacherClass = function(){
                     });
                     $('#div-tbl-frs').hide();
                     $('#title').html('Class Record');
+                    Cookies.set('term',term);
                 },
                 complete: function () {
                     setTimeout(function() {
@@ -384,27 +384,73 @@ var TeacherClass = function(){
 
         });
 
-        // term tab
-        $(document).on("click",".class-term",function(e){
+        //sched type btn
+        $(document).on("click",".sched-type-btn",function(e){
 
             e.preventDefault();
-            let term = $(this).attr('class-term');
-            let sched_id = Cookies.get('param1');
-            let tab = $(this).attr('href');
-            let tab_cookies = Cookies.get(tab);
 
-            if(sched_id == undefined || term ==''){
+            let sched_id = Cookies.get('param1');
+            let sched_type = $(this).attr('sched-type');
+            let type = sched_type==0?0:6;
+            let term = Cookies.get('term');
+
+            if(sched_id == '' || sched_id == null || term == undefined){
                 return false;
             }
 
-            if(tab_cookies == undefined){
-                ClassRecordTable(sched_id,term,tab);
-                Cookies.set(tab,tab);
-            }
+            $.ajax({
+                url: 'class-record-term',
+                type: "POST",
+                dataType:'json',
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                cache: false,
+                data: {  id: JSON.stringify(sched_id),type:type,sched_type:sched_type,type:type },
+                dataType: "json",
+                beforeSend: function () {
+                    KTApp.block('#kt_content', {
+                        overlayColor: '#000000',
+                        state: 'danger',
+                        message: 'Loading Your Class Record...'
+                    });
+                    $('#div-tbl-frs').hide();
+                    $('#title').html('Class Record');
+                },
+                complete: function () {
+                    setTimeout(function() {
+                        KTApp.unblock('#kt_content');
+                    }, 500);
+                    ClassRecordTable(sched_id,term,'#kt_tab_pane_1_4');
+                },
+                success: function (response) {
+                    if (response.success) {
 
-        });
+                        $('#display-render').last().append(window.atob(response.class_record));
 
+                    } else if (response.empty) {
+                        Swal.fire({
+                            icon: "info",
+                            text: response.empty,
+                            showCancelButton: false,
+                            confirmButtonText: "Ok, Got it",
+                            reverseButtons: true
+                        }).then(function (result) {
+                            KTUtil.scrollTop();
+                        });
+                    }else{
+                        console.log(response.error)
+                        Swal.fire("Oopps!", "Something went wrong, Please try again later", "warning");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log(xhr);
+                    console.log(status);
+                    console.log(error);
+                    console.log(xhr.responseText);
+                    Swal.fire("Oopps!", "Something went wrong, Please try again later", "error");
+                }
+            })
 
+        })
 
     }
 
@@ -441,10 +487,11 @@ var KTDatatablesDataSourceAjaxServer = function() {
 		// begin first table
 		table.DataTable({
 			responsive: true,
-			searchDelay: 500,
+			searchDelay: 3000,
 			processing: true,
 			serverSide: true,
             paging: false,
+            order: [[1, 'asc']],
 			ajax: {
 				url: 'frs-fetch',
 				type: 'POST',
@@ -452,13 +499,13 @@ var KTDatatablesDataSourceAjaxServer = function() {
 			},
 			columns: [
 				{data: 'stud_id'},
-				{data: 'fullname',name:'fullname'},
-				{data: 'prelim'},
-				{data: 'midterm'},
-				{data: 'finals'},
-				{data: 'final_grade'},
-				{data: 'equivalent'},
-				{data: 'remarks'},
+                {data: 'fullname',name:'fullname' },
+				{data: 'prelim', className:'text-center'},
+				{data: 'midterm', className:'text-center'},
+				{data: 'finals', className:'text-center'},
+				{data: 'final_grade', className:'text-center'},
+				{data: 'equivalent', className:'text-center'},
+				{data: 'remarks', className:'text-center'},
 				{data: 'Actions', responsivePriority: -1},
 			],
 			columnDefs: [
@@ -467,6 +514,7 @@ var KTDatatablesDataSourceAjaxServer = function() {
 					targets: -1,
 					title: 'Actions',
 					orderable: false,
+                    visible: false,
 					render: function(data, type, full, meta) {
                         if(full.remarks != 'INC'){
 						    return ' \<a grade-id="'+data+'" href="javascript:void(0)" class="btn btn-outline-danger btn-light-danger btn-sm btn-inc"><i class="flaticon2-layers-2"></i>Set as INC</a>\ ';
@@ -524,8 +572,4 @@ var KTDatatablesDataSourceAjaxServer = function() {
 	};
 
 }();
-
-// jQuery(document).ready(function() {
-// 	KTDatatablesDataSourceAjaxServer.init();
-// });
 

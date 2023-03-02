@@ -83,7 +83,6 @@ class Controller extends BaseController
 
                         $class->forget($x);
                         $class[$y]->type=2;
-                        $class[$y]->sched_id=$this->encrypt_id($class[$y]->sched_id);
 
                     }
 
@@ -95,13 +94,13 @@ class Controller extends BaseController
         return $class;
     }
 
-    public function tab_index_percentage($tab_index){
-
+    public function tab_index_percentage($tab_index)
+    {
         return $tab_index==0?0.10:
         ($tab_index==1?0.20:
         ($tab_index==2?0.20:
         ($tab_index==3?0.50:
-        ($tab_index==6?0.50:
+        ($tab_index==6?0.10:
         ($tab_index==7?0.70:0.20)))));
 
     }

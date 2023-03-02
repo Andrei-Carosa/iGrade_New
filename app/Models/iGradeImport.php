@@ -16,11 +16,11 @@ class iGradeImport extends Model
     ];
 
     public function import_lms(){
-        return $this->belongsTo(ScheduleActivity::class,'post_id','post_id');
+        return $this->belongsTo(LmsPost::class,'post_id','post_id');
     }
 
     public function import_lms_submitted(){
-        return $this->HasMany(ScheduleSubmittedActivity::class,'post_id','post_id');
+        return $this->HasMany(LmsPostSubmission::class,'post_id','post_id');
     }
 
     public function getCategoryNameAttribute(){
