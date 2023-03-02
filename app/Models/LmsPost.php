@@ -20,7 +20,7 @@ class LmsPost extends Model
     ];
 
     public function submitted_activity(){
-        return $this->hasMany(ScheduleSubmittedActivity::class,'post_id','post_id')->select(['submit_id','post_id','stud_id','score','hps']);
+        return $this->hasMany(LmsPostSubmission::class,'post_id','post_id')->select(['submit_id','post_id','stud_id','score','hps']);
     }
 
     public function scopeActive($query)

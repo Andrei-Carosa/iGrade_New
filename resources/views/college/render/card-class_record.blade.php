@@ -32,26 +32,29 @@
                             <!--begin::Navigation-->
                             <ul class="navi flex-column navi-hover py-2">
                                 <li class="navi-header font-weight-bolder text-uppercase font-size-sm text-primary pb-2">Class Record For:</li>
-                                @if(!empty($lec_grade))
-                                    <li class="navi-item">
-                                        <a href="#" class="navi-link">
-                                            <span class="navi-icon">
-                                                <i class="icon-sm flaticon-logout"></i>
-                                            </span>
-                                            <span class="navi-text sched-type-btn" sched-type='0'>LECTURE</span>
-                                        </a>
-                                    </li>
-                                @endif
-                                @if(!empty($lab_grade))
-                                    <li class="navi-item">
-                                        <a href="#" class="navi-link">
-                                            <span class="navi-icon">
-                                                <i class="icon-sm flaticon-logout"></i>
-                                            </span>
-                                            <span class="navi-text sched-type-btn" sched-type='1'>LABORATORY</span>
-                                        </a>
-                                    </li>
-                                @endif
+                                @foreach($class_teacher as $type)
+                                    @if($type == 0)
+                                        <li class="navi-item">
+                                            <a href="#" class="navi-link">
+                                                <span class="navi-icon">
+                                                    <i class="icon-sm flaticon-logout"></i>
+                                                </span>
+                                                <span class="navi-text sched-type-btn" sched-type='0'>LECTURE</span>
+                                            </a>
+                                        </li>
+                                    @endif
+                                    @if($type == 1)
+                                        <li class="navi-item">
+                                            <a href="#" class="navi-link">
+                                                <span class="navi-icon">
+                                                    <i class="icon-sm flaticon-logout"></i>
+                                                </span>
+                                                <span class="navi-text sched-type-btn" sched-type='1'>LABORATORY</span>
+                                            </a>
+                                        </li>
+                                    @endif
+                                @endforeach
+
                             </ul>
                             <!--end::Navigation-->
                         </div>

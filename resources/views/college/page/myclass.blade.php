@@ -74,12 +74,6 @@
                 </div>
                 <!--end::Group Actions-->
             </div>
-            <ol class="breadcrumb text-muted fs-6 fw-semibold bg-transparent" hidden>
-                <li class="breadcrumb-item"><a href="#" class="bread-my-class">My Class</a></li>
-                <li class="breadcrumb-item"><a href="#" class="bread-frs">Final Rating Sheet</a></li>
-                {{-- <li class="breadcrumb-item text-muted bread-class-record">Class Record</li>
-                <li class="breadcrumb-item text-muted sched-type">Lecture</li> --}}
-            </ol>
             <!--end::Details-->
 
             <!--begin::Toolbar-->

@@ -36,6 +36,7 @@ class AddClassRecordGrade
         $student_lab = array();
         $lec = $event->lec;
         $lab = $event->lab;
+        $sched_type = array();
 
         foreach($stud_sched as $key => $students){
 
@@ -48,8 +49,6 @@ class AddClassRecordGrade
                 'quiz'=>0,
                 'others'=>0,
                 'exam'=>0,
-                'term_grade'=>0,
-                'total_lec'=>0,
             );
 
             $student_lab[$key] = array(
@@ -60,8 +59,6 @@ class AddClassRecordGrade
                 'cp'=>0,
                 'exercise'=>0,
                 'exam'=>0,
-                'term_grade'=>0,
-                'total_lab'=>0,
             );
 
         }
@@ -74,6 +71,5 @@ class AddClassRecordGrade
             iGradeLab::insert($student_lab);
         }
 
-        return true;
     }
 }

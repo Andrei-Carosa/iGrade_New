@@ -3,7 +3,6 @@
 <html lang="en">
 	<!--begin::Head-->
 	<head><base href="">
-
 		<title>E-Class Record</title>
 		<meta charset="utf-8" />
         <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -18,8 +17,16 @@
 		<link href="{{ asset('assets/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
 
         <style>
+            input:disabled {
+                cursor: not-allowed;
+                pointer-events: all !important;
+            }
+            .hps-header th{
+                font-size: 0.6em;
+          padding: 1px !important;
+          height: 15px;
+            }
         </style>
-
 	</head>
 	<body id="kt_body" class="header-fixed header-mobile-fixed page-loading">
 

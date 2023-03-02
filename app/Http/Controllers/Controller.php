@@ -46,7 +46,7 @@ class Controller extends BaseController
 
         if( $validator->fails() || !$request->ajax() ){
 
-            $response = Response::json(['error' => 'Missing request id. Try again later'],200);
+            $response = Response::json(['error'=>'Missing request id. Try again later'],200);
 
         }
 

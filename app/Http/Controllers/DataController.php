@@ -10,6 +10,7 @@ use App\Models\iGradeLab;
 use App\Models\iGradeLecture;
 use App\Models\iGradeScores;
 use App\Models\iGradeTerm;
+use App\Models\LmsPost;
 use App\Models\LmsPostSubmission;
 use App\Models\Schedule;
 use App\Models\ScheduleTeacher;
@@ -208,7 +209,7 @@ class DataController extends Controller
                     }
                 }
 
-            $class_record = base64_encode(View::make("college.render.card-class_record",compact('class','lec_grade','lab_grade','term'))->render());
+            $class_record = base64_encode(View::make("college.render.card-class_record",compact('class','lec_grade','lab_grade','term','class_teacher'))->render());
             $response = Response::json(['success' =>'success','class_record'=>$class_record],200);
 
         } catch (Throwable $e){
@@ -274,32 +275,108 @@ class DataController extends Controller
             }
 
             $sched_id = $this->decrypt_id($request->id);
+            $term = $request->term==1?'PRELIM':($request->term==2?'MIDTERM':'FINALS');
+
             $class = Schedule::with('sched_course','sched_blocking.block')->where('sched_id',$sched_id)->first(['sched_id','course_id']);
-
-            $stud_sched = StudentSchedule::with('stud_info')->where('sched_id',$sched_id)->get('stud_id');
-            $import = iGradeImport::with('import_lms')->where([['sched_id',$sched_id],['category',$request->sched_type]])->pluck('post_id');
-            $column = iGradeColumn::with('column_score')->where([['sched_id',$sched_id],['type',$request->sched_type]])->get();
-            $column_score = iGradeScores::whereIn('col_id',$column)->get();
-
-            $lms_submission = LmsPostSubmission::whereIn('post_id',$import)->get(['stud_id','score','post_id'])->toArray();
-
-            foreach($stud_sched as $students){
-                foreach($import as $post_id){
-
-                    $result_key = array_keys($lms_submission, array('stud_id' => $students->stud_id,'post_id' => $post_id));
-                    $key = array_search($students->stud_id, array_column($lms_submission, 'stud_id'));
-
-                    if( !empty($result_key) ) {
-                        print_r($result_key);
-                    }else{
-                        echo 'Missing:'.$students->stud_id.'<br>';
-                    }
-                }
+            if($request->sched_type == 0){
+                $grading_sheet = base64_encode(View::make("college.render.card-grading_sheet_lec",compact('class','term'))->render());
+            }elseif($request->sched_type ==1){
+                $grading_sheet = base64_encode(View::make("college.render.card-grading_sheet_lab",compact('class','term'))->render());
             }
-            $grading_sheet = base64_encode(View::make("college.render.card-class_record",compact('stud_sched','import','lab_grade','term'))->render());
+
             $response = Response::json(['success' =>'success','grading_sheet'=>$grading_sheet],200);
 
         } catch(Throwable $e){
+
+            $response = Response::json(['error' => $e->getMessage()],400);
+        }
+
+        return $response;
+
+    }
+
+    public function tbl_grading_sheet(Request $request)
+    {
+
+        try{
+
+            $sched_id = $this->decrypt_id($request->id);
+
+            $stud_sched = StudentSchedule::with('stud_info')->where('sched_id',$sched_id)->get('stud_id');
+            $import = iGradeImport::with(['import_lms','import_lms_submitted'])->where([['sched_id',$sched_id],['category',$request->category],['term',$request->term]])->get();
+            $column = iGradeColumn::with('column_score')->where([['sched_id',$sched_id],['type',$request->category],['term',$request->term]])->get();
+
+            $student_score = array();
+            $score_column = array();
+            $score_import = array();
+
+            $total_all_hps = 0;
+            $total_import_hps = 0;
+            $total_column_hps = 0;
+            $percent_type = $this->tab_index_percentage($request->category);
+            $type_name = $this->tab_name($request->category);
+
+            if( count($import) >=1 || count($column)>=1 ){
+
+                foreach($stud_sched as $stud_key => $students){
+
+                    $total_import_score = 0;
+                    $total_column_score = 0;
+
+                    $total_import_hps = 0;
+                    $total_column_hps = 0;
+
+                    $calculated_score = 0;
+
+                    //import
+                    foreach($import as $key_import => $imports){
+
+                        $filtered_array = $imports->import_lms_submitted->where('stud_id',$students->stud_id)->all();
+
+                        if( !empty($filtered_array) ) {
+                            foreach($filtered_array as $submission_score){
+                                $score_import["import_$key_import"] = $submission_score->score== null ? 0 :$submission_score->score;
+                                $total_import_score = $total_import_score+$score_import["import_$key_import"];
+                            }
+                        }else{
+                            $score_import["import_$key_import"] = 0 ;
+                        }
+
+                        $total_import_hps = $total_import_hps+ $imports->import_lms->hps;
+                    }
+
+                    //column
+                    foreach($column as $key_column => $columns){
+                        if($students->stud_id == $columns->column_score->stud_id){
+                            $score_column["column_$key_column"] = $columns->column_score->score;
+                            $total_column_score = $total_column_score+$score_column["column_$key_column"];
+                        }else{
+                            $score_column["column_$key_column"] = 0;
+                        }
+
+                        $total_column_hps = $total_column_hps+$columns->column_score->hps;
+
+                    }
+
+                    if( ($total_import_hps != 0 || $total_column_hps !=0) ){
+                        $calculated_score = (((($total_import_score+$total_column_score) / ($total_import_hps+$total_column_hps)) * $percent_type)*100);
+                    }
+
+                    $student_score[$stud_key] = array('name'=> $students->stud_info->fullname,'stud_id'=> $students->stud_id,'total_score'=>$total_import_score+$total_column_score,'calculated_score'=>$calculated_score);
+                    $student_score[$stud_key] = array_merge($student_score[$stud_key],$score_import);
+                    $student_score[$stud_key] = array_merge($student_score[$stud_key],$score_column);
+
+                }
+
+            }
+
+            $total_all_hps = $total_column_hps+$total_import_hps;
+            $grading_sheet_tbl = base64_encode(View::make("college.render.table-grading_sheet",compact('student_score','import','column','total_all_hps','percent_type','type_name'))->render());
+            $response = Response::json(['success' =>'success','grading_sheet_tbl'=>$grading_sheet_tbl],200);
+
+        }catch (Throwable $e){
+
+            $response = Response::json(['error' =>'Something went wrong loading class record table.'.$e->getMessage()],400);
 
         }
 
@@ -307,7 +384,98 @@ class DataController extends Controller
 
     }
 
-    public function grading_sheet_tab($type){
+    public function add_activity(Request $request)
+    {
+        try{
+
+            $response = $this->check_request($request);
+            if($response != true){
+                return $response;
+            }
+
+            $sched_id = $this->decrypt_id($request->id);
+            $category = $request->category;
+
+            if($request->term == $this->sys_term->term_id){
+
+                $lms_post = LmsPost::where([['term_id',$request->term],['sched_id',$sched_id]])->where(function($query) {
+                    return $query->where('type_id',1)->orWhere('type_id',6)->orWhere('type_id',2);
+                })->orderBy('type_id','asc')->withCount('submitted_activity')->get();
+                $import = IgradeImport::where([['category',$request->category],['sched_id',$sched_id],['term',$request->term]])->get(['post_id','import_id','category']);
+
+                $modal_activities = base64_encode(View::make("college.render.modal-activities",compact('lms_post','import','category'))->render());
+                $response = Response::json(['success'=>'success','modal_activities' => $modal_activities],200);
+
+            }else{
+
+                $response = Response::json(['error'=>'Including of Classwork is open for '.$this->sys_term->term.' only.'],200);
+
+            }
+
+
+        } catch (Throwable $e){
+
+            $response = Response::json(['error'=>'Something went wrong loading your Activities'.$e->getMessage()],400);
+
+        }
+
+        return $response;
+
+    }
+
+    public function save_added_activity(Request $request)
+    {
+
+        try {
+
+            $response = $this->check_request($request);
+            $insert = array();
+
+            if($response != true){
+                return $response;
+            }
+
+            if($request->term == $this->sys_term->term_id){
+
+                $sched_id = $this->decrypt_id($request->id);
+
+                foreach($request->post_id as $post_id){
+
+                    $check_import = IgradeImport::where([['post_id',$post_id],['sched_id',$sched_id],['category',$request->category]])->count();
+                    if($check_import == 0){
+
+                        $insert[]=[
+                            'sched_id'=>$sched_id,
+                            'post_id'=>$post_id,
+                            'category'=>$request->category,
+                            'p_id'=>$this->p_id,
+                            'term'=>$this->sys_term->term_id,
+                        ];
+                    }
+
+                }
+
+                $import = IgradeImport::insert($insert);
+                $response = Response::json(['success'=>'success'],200);
+
+            }else{
+
+                $response = Response::json(['error'=>'Adding of Activities is open for '.$this->sys_term->term.' only.'],200);
+
+            }
+
+        } catch(Throwable $e){
+
+            $response = Response::json(['error' =>'Something went wrong. Try again later.'.$e->getMessage()],200);
+        }
+
+        return $response;
+
+
+    }
+
+    public function remove_activity (Request $request)
+    {
 
     }
 

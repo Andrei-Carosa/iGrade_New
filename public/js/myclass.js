@@ -28,6 +28,7 @@ var handleSystem = function (){
         Cookies.remove('#kt_tab_pane_2_4');
         Cookies.remove('#kt_tab_pane_3_4');
         Cookies.remove('param1');
+        Cookies.remove('term');
     }
 
   return {
@@ -149,6 +150,59 @@ var TeacherClass = function(){
 
     }
 
+    var GradingSheetTable = function(sched_id,type,term,tab){
+
+        $.ajax({
+            url: 'tbl-grading-sheet',
+            type: "POST",
+            dataType:'json',
+            contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+            cache: false,
+            data: {  id: JSON.stringify(sched_id),term:term,category:type },
+            dataType: "json",
+            beforeSend: function () {
+                KTApp.block('#kt_content', {
+                    overlayColor: '#000000',
+                    state: 'danger',
+                    message: 'Loading Your Class Record...'
+                });
+            },
+            complete: function () {
+                setTimeout(function() {
+                    KTApp.unblock('#kt_content');
+                }, 500);
+            },
+            success: function (response) {
+                if (response.success) {
+
+                    $(tab).html(window.atob(response.grading_sheet_tbl));
+
+                } else if (response.empty) {
+                    Swal.fire({
+                        icon: "info",
+                        text: response.empty,
+                        showCancelButton: false,
+                        confirmButtonText: "Ok, Got it",
+                        reverseButtons: true
+                    }).then(function (result) {
+                        KTUtil.scrollTop();
+                    });
+                }else{
+                    console.log(response.error)
+                    Swal.fire("Oopps!", "Something went wrong, Please try again later", "warning");
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log(xhr);
+                console.log(status);
+                console.log(error);
+                console.log(xhr.responseText);
+                Swal.fire("Oopps!", "Something went wrong, Please try again later", "error");
+            }
+        })
+
+    }
+
     var HandleTeacherAction = function(){
 
         //back to my class
@@ -171,7 +225,7 @@ var TeacherClass = function(){
 
         })
 
-        //back to back-frs
+        //back to frs
         $(document).on("click",".back-frs",function(e){
 
             e.preventDefault();
@@ -183,6 +237,7 @@ var TeacherClass = function(){
 
             $('#title').html('Final Rating Sheet');
             $('#div-class-record').remove();
+            Cookies.remove('term');
             $('#frs_datatable').DataTable().ajax.reload();
 
             setTimeout(function() {
@@ -190,6 +245,27 @@ var TeacherClass = function(){
                 $('#div-tbl-frs').show();
             }, 500);
 
+        })
+
+        //back to back-class record
+        $(document).on("click",".back-class-record",function(e){
+
+            e.preventDefault();
+            let sched_id = Cookies.get('param1');
+            let term = Cookies.get('term');
+
+            KTApp.block('#kt_content', {
+                overlayColor: '#000000',
+                state: 'danger',
+                message: 'Loading your Class Record ...'
+            });
+
+            $('#class-record-type').remove();
+            setTimeout(function() {
+                KTApp.unblock('#kt_content');
+                $('#div-class-record').show();
+            }, 500);
+            ClassRecordTable(sched_id,term,'#kt_tab_pane_1_4');
         })
 
          //view frs
@@ -393,18 +469,19 @@ var TeacherClass = function(){
             let sched_type = $(this).attr('sched-type');
             let type = sched_type==0?0:6;
             let term = Cookies.get('term');
+            let tab = sched_type==0?'#kt_tab_pane_1_4_lec':'#kt_tab_pane_1_4_lab';
 
-            if(sched_id == '' || sched_id == null || term == undefined){
+            if(sched_id == '' || term == undefined){
                 return false;
             }
 
             $.ajax({
-                url: 'class-record-term',
+                url: 'class-grading-sheet',
                 type: "POST",
                 dataType:'json',
                 contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
                 cache: false,
-                data: {  id: JSON.stringify(sched_id),type:type,sched_type:sched_type,type:type },
+                data: {  id: JSON.stringify(sched_id),type:type,sched_type:sched_type,type:type,term:term },
                 dataType: "json",
                 beforeSend: function () {
                     KTApp.block('#kt_content', {
@@ -412,19 +489,19 @@ var TeacherClass = function(){
                         state: 'danger',
                         message: 'Loading Your Class Record...'
                     });
-                    $('#div-tbl-frs').hide();
+                    $('#div-class-record').hide();
                     $('#title').html('Class Record');
                 },
                 complete: function () {
                     setTimeout(function() {
                         KTApp.unblock('#kt_content');
                     }, 500);
-                    ClassRecordTable(sched_id,term,'#kt_tab_pane_1_4');
+                    GradingSheetTable(sched_id,type,term,tab);
                 },
                 success: function (response) {
                     if (response.success) {
 
-                        $('#display-render').last().append(window.atob(response.class_record));
+                        $('#display-render').last().append(window.atob(response.grading_sheet));
 
                     } else if (response.empty) {
                         Swal.fire({
@@ -451,6 +528,138 @@ var TeacherClass = function(){
             })
 
         })
+
+        //add activity
+        $(document).on("click",".add-activity",function(e){
+
+            e.preventDefault();
+            let type = $('li a.nav-type.active').attr('data-nav-type');
+            let sched_id = Cookies.get('param1');
+            let term = Cookies.get('term');
+
+            if(sched_id == undefined || term == undefined){
+                return false;
+            }
+
+            $.ajax({
+                url: 'add-activity',
+                type: "POST",
+                dataType:'json',
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                cache: false,
+                data: {  id: JSON.stringify(sched_id),category:type,term:term },
+                beforeSend: function () {
+                    KTApp.block('#kt_content', {
+                        overlayColor: '#000000',
+                        state: 'danger',
+                        message: 'Loading Your Activities in Pinnacle...'
+                    });
+                },
+                complete: function () {
+                    setTimeout(function() {
+                        KTApp.unblock('#kt_content');
+                        $('#modal-activities').modal('show');
+                    }, 500);
+                },
+                success: function (response) {
+
+                    if (response.success) {
+
+                        $('#modal-activities').remove();
+                        $('#kt_body').last().append(window.atob(response.modal_activities));
+
+                    } else if (response.error) {
+                        Swal.fire("Oopps!",response.error,"info");
+
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log(xhr);
+                    console.log(status);
+                    console.log(error);
+                    console.log(xhr.responseText);
+                    Swal.fire("Oopps!", "Something went wrong, Please try again later", "info");
+                }
+            })
+
+        });
+
+        //save-added-activities
+        $(document).on("click",".save-added-activities",function(e){
+
+            e.preventDefault();
+            let post_id = new Array();
+            let sched_id = Cookies.get('param1');
+            let term = Cookies.get('term');
+            let type = $('li a.nav-type.active').attr('data-nav-type');
+            let tab = $('li a.nav-type.active').attr('href');
+
+            $('.activities-list input[type="checkbox"]:checked').each(function() {
+                post_id.push($(this).attr('post-id'));
+            });
+
+            if(post_id.length == 0){
+                Swal.fire('Oops','Missing Request ID. Try Again Later','info');
+                return false;
+            }
+
+            $.ajax({
+                url: 'save-added-activity',
+                type: "POST",
+                dataType:'json',
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                cache: false,
+                data: {  id: JSON.stringify(sched_id),category:type,post_id:post_id,term:term },
+                beforeSend: function () {
+                    KTApp.block('#kt_content', {
+                        overlayColor: '#000000',
+                        state: 'danger',
+                        message: 'Loading Your Activities in Pinnacle...'
+                    });
+                },
+                complete: function () {
+                    setTimeout(function() {
+                        KTApp.unblock('#kt_content');
+                    }, 500);
+                },
+                success: function (response) {
+
+                    if (response.success) {
+                        GradingSheetTable (sched_id,type,term,tab);
+                    } else if (response.error) {
+
+                        Swal.fire("Oopps!",response.error,"info");
+
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log(xhr);
+                    console.log(status);
+                    console.log(error);
+                    console.log(xhr.responseText);
+                    Swal.fire("Oopps!", "Something went wrong, Please try again later", "info");
+
+                }
+            })
+
+
+        });
+
+        //nav type
+        $(document).on("click",".nav-type",function(e){
+
+            e.preventDefault();
+            let type = $(this).attr('data-nav-type');
+            let tab = $(this).attr('href');
+            let term = Cookies.get('term');
+            let sched_id = Cookies.get('param1');
+
+            // console.log(type,tab,term,sched_id)
+            GradingSheetTable (sched_id,type,term,tab);
+
+        });
+
+
 
     }
 

@@ -43,7 +43,14 @@ Route::group(['prefix'=>'college','middleware'=>['auth','isFaculty','PreventBack
     Route::post('/class-record-tbl', [DataController::class, 'class_record_tbl'])->name('college.class_record_tbl');
 
     Route::post('/class-grading-sheet', [DataController::class, 'class_grading_sheet'])->name('college.class_grading_sheet');
+    Route::post('/tbl-grading-sheet', [DataController::class, 'tbl_grading_sheet'])->name('college.tbl_grading_sheet');
 
+    Route::post('/add-activity', [DataController::class, 'add_activity'])->name('college.add_activity');
+    Route::post('/save-added-activity', [DataController::class, 'save_added_activity'])->name('college.save_added_activity');
+    Route::post('/remove-activity', [DataController::class, 'remove_activity'])->name('college.remove_activity');
+
+    // Route::post('/add-column', [DataController::class, 'add_column'])->name('college.add_column');
+    // Route::post('/remove-column', [DataController::class, 'remove_column'])->name('college.remove_column');
 
 
 });
