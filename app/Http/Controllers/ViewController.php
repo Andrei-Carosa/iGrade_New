@@ -70,14 +70,18 @@ class ViewController extends Controller
         //         //column
         //         foreach($column as $key_column => $columns){
 
-        //             if($students->stud_id == $columns->column_score->stud_id){
-        //                 $score_column["column_$key_column"] = $columns->column_score->score;
-        //                 $total_column_score = $total_column_score+$score_column["column_$key_column"];
-        //             }else{
-        //                 $score_column["column_$key_column"] = 0;
-        //             }
+        //             foreach($columns->column_score as $column_score){
 
-        //             $total_column_hps = $total_column_hps+$columns->column_score->hps;
+        //                 if($students->stud_id == $column_score->stud_id){
+        //                     $score_column["column_$key_column"] = $column_score->score;
+        //                     $total_column_score = $total_column_score+$score_column["column_$key_column"];
+        //                 }else{
+        //                     $score_column["column_$key_column"] = 0;
+        //                 }
+
+        //                 $total_column_hps = $total_column_hps+$column_score->hps;
+
+        //             }
 
         //         }
 
@@ -91,12 +95,12 @@ class ViewController extends Controller
 
         //     }
 
-        //     $grading_sheet_tbl=base64_encode(View::make("college.render.table-grading_sheet",compact('student_score','import','column'))->render());
+            // $grading_sheet_tbl=base64_encode(View::make("college.render.table-grading_sheet",compact('student_score','import','column'))->render());
             // $response = Response::json(['success' =>'success'],200);
 
         // }
 
-// return $response;
+// return $student_score;
 
         return view('college.page.myclass');
 

@@ -24,11 +24,17 @@ var handleSystem = function (){
     }
 
     var ClearCookies = function(){
-        Cookies.remove('#kt_tab_pane_1_4');
-        Cookies.remove('#kt_tab_pane_2_4');
-        Cookies.remove('#kt_tab_pane_3_4');
         Cookies.remove('param1');
         Cookies.remove('term');
+
+        Cookies.remove('#kt_tab_pane_1_4_lec');
+        Cookies.remove('#kt_tab_pane_2_4_lec');
+        Cookies.remove('#kt_tab_pane_3_4_lec');
+        Cookies.remove('#kt_tab_pane_4_4_lec');
+
+        Cookies.remove('#kt_tab_pane_1_4_lab');
+        Cookies.remove('#kt_tab_pane_2_4_lab');
+        Cookies.remove('#kt_tab_pane_3_4_lab');
     }
 
   return {
@@ -48,6 +54,17 @@ $(document).ready(function() {
 "use strict"
 
 var TeacherClass = function(){
+
+    var ClearTab = function(){
+        Cookies.remove('#kt_tab_pane_1_4_lec');
+        Cookies.remove('#kt_tab_pane_2_4_lec');
+        Cookies.remove('#kt_tab_pane_3_4_lec');
+        Cookies.remove('#kt_tab_pane_4_4_lec');
+
+        Cookies.remove('#kt_tab_pane_1_4_lab');
+        Cookies.remove('#kt_tab_pane_2_4_lab');
+        Cookies.remove('#kt_tab_pane_3_4_lab');
+    }
 
     var HandleTeacherClass = function(){
 
@@ -244,10 +261,11 @@ var TeacherClass = function(){
                 KTApp.unblock('#kt_content');
                 $('#div-tbl-frs').show();
             }, 500);
+            ClearTab();
 
         })
 
-        //back to back-class record
+        //back to class record
         $(document).on("click",".back-class-record",function(e){
 
             e.preventDefault();
@@ -266,6 +284,7 @@ var TeacherClass = function(){
                 $('#div-class-record').show();
             }, 500);
             ClassRecordTable(sched_id,term,'#kt_tab_pane_1_4');
+            ClearTab();
         })
 
          //view frs
@@ -645,6 +664,63 @@ var TeacherClass = function(){
 
         });
 
+        //remove added activities
+        document.body.addEventListener('click', function(e){
+
+            if(e.target.hasAttribute('remove-import')){
+
+                let import_id = window.btoa(e.target.getAttribute('remove-import'));
+                let sched_id = Cookies.get('param1');
+                let term = Cookies.get('term');
+                let type = $('li a.nav-type.active').attr('data-nav-type');
+                let tab = $('li a.nav-type.active').attr('href');
+
+                if(import_id == ''){
+                    return false;
+                }
+
+                $.ajax({
+                    url: 'remove-activity',
+                    type: "POST",
+                    dataType:'json',
+                    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                    cache: false,
+                    data: {  id: JSON.stringify(import_id) },
+                    beforeSend: function () {
+                        KTApp.block('#kt_content', {
+                            overlayColor: '#000000',
+                            state: 'danger',
+                            message: 'Loading Your Activities in Pinnacle...'
+                        });
+                    },
+                    complete: function () {
+                        setTimeout(function() {
+                            KTApp.unblock('#kt_content');
+                        }, 500);
+                        GradingSheetTable (sched_id,type,term,tab);
+                        $("#"+e.target.getAttribute('id')).removeAttr('remove-import');
+                        $("."+e.target.getAttribute('id')).remove();
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire("Activity is Removed!","","info");
+                        } else if (response.error) {
+                            Swal.fire("Oopps!",response.error,"info");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log(xhr);
+                        console.log(status);
+                        console.log(error);
+                        console.log(xhr.responseText);
+                        Swal.fire("Oopps!", "Something went wrong, Please try again later", "info");
+
+                    }
+                })
+
+            }
+        });
+
         //nav type
         $(document).on("click",".nav-type",function(e){
 
@@ -653,13 +729,270 @@ var TeacherClass = function(){
             let tab = $(this).attr('href');
             let term = Cookies.get('term');
             let sched_id = Cookies.get('param1');
+            let tab_cookie = Cookies.get(tab);
 
-            // console.log(type,tab,term,sched_id)
-            GradingSheetTable (sched_id,type,term,tab);
+            if(tab_cookie == undefined){
+                GradingSheetTable (sched_id,type,term,tab);
+                Cookies.set(tab,type);
+            }
 
         });
 
+        //add column
+        $(document).on("click", ".add-column", function(e){
 
+            e.preventDefault();
+            let sched_id = Cookies.get('param1');
+            let term = Cookies.get('term');
+            let type = $('li a.nav-type.active').attr('data-nav-type');
+            let tab = $('li a.nav-type.active').attr('href');
+
+            $.ajax({
+
+                url: 'add-column',
+                type: "POST",
+                dataType:'json',
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                cache: false,
+                data: {  id: JSON.stringify(sched_id),category: type,term:term},
+                beforeSend: function () {
+                    KTApp.block('#kt_content', {
+                        overlayColor: '#000000',
+                        state: 'danger',
+                        message: 'Loading Your Activities in Pinnacle...'
+                    });
+                },
+                complete: function () {
+                    setTimeout(function() {
+                        KTApp.unblock('#kt_content');
+                    }, 500);
+                    GradingSheetTable (sched_id,type,term,tab);
+                },
+                success: function (response) {
+
+                    if (response.success_add) {
+
+                        Swal.fire("Column is Added",'',"info");
+
+                    } else if (response.error) {
+
+                        Swal.fire("Oopps!",response.error,"info");
+
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log(xhr);
+                    console.log(status);
+                    console.log(error);
+                    console.log(xhr.responseText);
+                    Swal.fire("Oopps!", "Something went wrong, Please try again later", "warning");
+
+                }
+            })
+
+        });
+
+        // view column
+        $(document).on("click",".view-column",function(e){
+
+            e.preventDefault();
+            let type = $('li a.nav-type.active').attr('data-nav-type');
+            let sched_id = Cookies.get('param1');
+            let term = Cookies.get('term');
+
+            if(sched_id == undefined || term == undefined){
+                return false;
+            }
+
+
+            $.ajax({
+                url: 'view-column',
+                type: "POST",
+                dataType:'json',
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                cache: false,
+                data: {  id: JSON.stringify(sched_id),category:type,term:term },
+                beforeSend: function () {
+                    KTApp.block('#kt_content', {
+                        overlayColor: '#000000',
+                        state: 'danger',
+                        message: 'Loading Please Wait...'
+                    });
+                },
+                complete: function () {
+                    setTimeout(function() {
+                        KTApp.unblock('#kt_content');
+                        $('#modal-column').modal('show');
+                    }, 500);
+                },
+                success: function (response) {
+
+                    if (response.success) {
+                        $('#modal-column').remove();
+                        $('#kt_body').last().append(window.atob(response.columns));
+
+                    } else if (response.error) {
+                        Swal.fire("Oopps!",response.error,"info");
+
+                    } else if (response.empty){
+                        Swal.fire("Oopps!",response.empty,"info");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log(xhr);
+                    console.log(status);
+                    console.log(error);
+                    console.log(xhr.responseText);
+                    Swal.fire("Oopps!", "Something went wrong, Please try again later", "info");
+                }
+            })
+
+        });
+
+        //remove-column-btn
+        $(document).on('click', '.remove-column', function(e){
+
+            e.preventDefault();
+            let sched_id = Cookies.get('param1');
+            let term = Cookies.get('term');
+            let type = $('li a.nav-type.active').attr('data-nav-type');
+            let tab = $('li a.nav-type.active').attr('href');
+            let column_id = $(this).attr('col-id');
+
+            $.ajax({
+
+                url: 'remove-column',
+                type: "POST",
+                dataType:'json',
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                cache: false,
+                data: {  id: column_id,term:term,category:type },
+                beforeSend: function () {
+                    KTApp.block('#kt_content', {
+                        overlayColor: '#000000',
+                        state: 'danger',
+                        message: 'Loading Please Wait...'
+                    });
+                    $(this).parent().parent().remove()
+                },
+                complete: function () {
+                    setTimeout(function() {
+                        KTApp.unblock('#kt_content');
+                    }, 500);
+                    GradingSheetTable (sched_id,type,term,tab);
+                },
+                success: function (response) {
+
+                    if(response.success){
+                        Swal.fire('Ooops','Column is Removed','info');
+
+                    }else if(response.error){
+                        console.log(response)
+                        Swal.fire('Ooops',response.error,'info');
+                    }
+
+                },
+                error: function (xhr, status, error) {
+                    console.log(xhr);
+                    console.log(status);
+                    console.log(error);
+                    console.log(xhr.responseText);
+                    Swal.fire("Oopps!", "Something went wrong, Please try again later", "info");
+
+                }
+            })
+        });
+
+         //column hps
+         $(document).on('change', 'table thead .hps-header th .column_hps', async function(e){
+
+            e.preventDefault();
+
+            let hps = parseInt(($(this).val()));
+            let col_id = $(this).attr('column_id');
+            let type = $('li a.nav-type.active').attr('data-nav-type');
+            let total = $( e.currentTarget ).closest("thead").find('.total_all_hps');
+
+            let column_hps = 0;
+            let import_hps = 0;
+            let overall_score = 0;
+
+            if(isNaN(hps)){
+                $(this).addClass('border-danger');
+            }
+
+            if(hps == '' || hps == null ){
+                hps = 0;
+            }
+
+            if(!$.isNumeric(hps)){
+                Swal.fire('Oops','Invalid input. Numbers only','info');
+                return false;
+            }
+
+            if($(this).hasClass('border-danger')){
+                $(this).removeClass('border-danger');
+            }
+
+            //import total hps
+            // $("#grading_table thead tr th .import_hps").each(function() {
+            //     $(this).each(function( index ) {
+            //         import_hps = import_hps+parseInt($(this).val());
+            //     });
+            // });
+
+            // column total hps
+            $("#grading_table thead .hps-header th .column_hps").each(function() {
+                $(this).each(function( index ) {
+
+                    if (isNaN($(this).val())) {
+                        Swal.fire('Oops','Invalid input. Numbers only','info');
+                        $(this).val(0);
+                        return false;
+                    }
+
+                    if($(this).val() != ''){
+                        column_hps = column_hps+parseInt($(this).val());
+                    }
+
+                });
+            });
+
+            if(column_hps != '' &&  import_hps != '' ){
+                overall_score = column_hps+import_hps;
+            }else{
+                if(import_hps != ''){
+                    overall_score = import_hps;
+                }else if(column_hps !=''){
+                    overall_score = column_hps;
+                }
+            }
+
+            $( e.currentTarget ).closest("thead").find('.total_all_hps').val(column_hps+import_hps);
+
+            // $.ajax({
+            //     url: 'update-column-hps',
+            //     type: "POST",
+            //     dataType:'json',
+            //     contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+            //     cache: false,
+            //     data: {  id: JSON.stringify(col_id),hps:hps },
+            //     success: function (response) {
+            //             if (response.error) {
+            //             Swal.fire("Oopps!",response.error,"info");
+            //         }
+            //     },
+            //     error: function (xhr, status, error) {
+            //         console.log(xhr);
+            //         console.log(status);
+            //         console.log(error);
+            //         console.log(xhr.responseText);
+            //         Swal.fire("Oopps!", "Something went wrong, Please try again later", "info");
+
+            //     }
+            // })
+
+        });
 
     }
 

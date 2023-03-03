@@ -17,17 +17,17 @@
             <div class="card-toolbar">
                 <ul class="nav nav-tabs nav-bold nav-tabs-line pl-5">
                     <li class="nav-item">
-                        <a class="nav-link active nav-type" data-nav-type ="0" data-toggle="tab" href="#kt_tab_pane_1_4_lab">
+                        <a class="nav-link active nav-type" data-nav-type ="6" data-toggle="tab" href="#kt_tab_pane_1_4_lab">
                             <span class="nav-text">Class Participation (10%)</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-type" data-nav-type ="1" data-toggle="tab" href="#kt_tab_pane_2_4_lab">
+                        <a class="nav-link nav-type" data-nav-type ="7" data-toggle="tab" href="#kt_tab_pane_2_4_lab">
                             <span class="nav-text">Exercise (70%)</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-type" data-nav-type ="3" data-toggle="tab" href="#kt_tab_pane_3_4_lab">
+                        <a class="nav-link nav-type" data-nav-type ="8" data-toggle="tab" href="#kt_tab_pane_3_4_lab">
                             <span class="nav-text">Exam (20%)</span>
                         </a>
                     </li>

@@ -17,14 +17,10 @@
 		<link href="{{ asset('assets/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
 
         <style>
-            input:disabled {
-                cursor: not-allowed;
-                pointer-events: all !important;
-            }
             .hps-header th{
                 font-size: 0.6em;
-          padding: 1px !important;
-          height: 15px;
+                padding: 1px !important;
+                height: 15px;
             }
         </style>
 	</head>

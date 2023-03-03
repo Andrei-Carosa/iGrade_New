@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AddColumn;
 use App\Events\ViewClassRecord;
 use App\Events\ViewFRS;
 use App\Models\iGradeColumn;
@@ -302,7 +303,7 @@ class DataController extends Controller
 
             $sched_id = $this->decrypt_id($request->id);
 
-            $stud_sched = StudentSchedule::with('stud_info')->where('sched_id',$sched_id)->get('stud_id');
+            $stud_sched = StudentSchedule::with('stud_info')->where('sched_id',$sched_id)->get();
             $import = iGradeImport::with(['import_lms','import_lms_submitted'])->where([['sched_id',$sched_id],['category',$request->category],['term',$request->term]])->get();
             $column = iGradeColumn::with('column_score')->where([['sched_id',$sched_id],['type',$request->category],['term',$request->term]])->get();
 
@@ -347,14 +348,19 @@ class DataController extends Controller
 
                     //column
                     foreach($column as $key_column => $columns){
-                        if($students->stud_id == $columns->column_score->stud_id){
-                            $score_column["column_$key_column"] = $columns->column_score->score;
-                            $total_column_score = $total_column_score+$score_column["column_$key_column"];
-                        }else{
-                            $score_column["column_$key_column"] = 0;
-                        }
 
-                        $total_column_hps = $total_column_hps+$columns->column_score->hps;
+                        foreach($columns->column_score as $column_score){
+
+                            if($students->stud_id == $column_score->stud_id){
+                                $score_column["column_$key_column"] = $column_score->score;
+                                $total_column_score = $total_column_score+$score_column["column_$key_column"];
+                            }else{
+                                $score_column["column_$key_column"] = 0;
+                            }
+
+                            $total_column_hps = $total_column_hps+$column_score->hps;
+
+                        }
 
                     }
 
@@ -398,10 +404,11 @@ class DataController extends Controller
 
             if($request->term == $this->sys_term->term_id){
 
-                $lms_post = LmsPost::where([['term_id',$request->term],['sched_id',$sched_id]])->where(function($query) {
+                $lms_post = LmsPost::where([['term_id',$request->term],['sched_id',$sched_id],['p_id',$this->p_id]])->where(function($query) {
                     return $query->where('type_id',1)->orWhere('type_id',6)->orWhere('type_id',2);
                 })->orderBy('type_id','asc')->withCount('submitted_activity')->get();
-                $import = IgradeImport::where([['category',$request->category],['sched_id',$sched_id],['term',$request->term]])->get(['post_id','import_id','category']);
+
+                $import = IgradeImport::where([['sched_id',$sched_id],['term',$request->term],['p_id',$this->p_id]])->get(['post_id','import_id','category']);
 
                 $modal_activities = base64_encode(View::make("college.render.modal-activities",compact('lms_post','import','category'))->render());
                 $response = Response::json(['success'=>'success','modal_activities' => $modal_activities],200);
@@ -477,6 +484,156 @@ class DataController extends Controller
     public function remove_activity (Request $request)
     {
 
+        try {
+
+            $response = $this->check_request($request);
+            if($response != true){
+                return $response;
+            }
+
+            $import_id = base64_decode($request->id);
+            $clear_import = IgradeImport::destroy($import_id);
+
+            if($clear_import){
+                $response = Response::json(['success'=>'success'],200);
+            }else{
+                $response = Response::json(['error'=>'Something went wrong Removing your Import.'],200);
+            }
+
+        } catch(Throwable $e){
+            $response = Response::json(['error'=>'Something went wrong Removing your Import.'.$e->getMessage()],400);
+        }
+
+        return $response;
+
+    }
+
+    public function add_column(Request $request)
+    {
+
+        try {
+
+            $sys_setting=$this->sys_setting();
+            $sys_term=$this->sys_term();
+            $response = $this->check_request($request);
+
+            if($response != true){
+                return $response;
+            }
+
+            $sched_id = $this->decrypt_id($request->id);
+
+            if($request->term == $this->sys_term->term_id ){
+
+                    $add_column = new IgradeColumn;
+                    $add_column->sched_id = $sched_id;
+                    $add_column->term = $request->term;
+                    $add_column->type = $request->category;
+
+                    if($add_column->save()){
+                        $event = event(new AddColumn($add_column->col_id,$sched_id));
+
+                        if($event){
+                            $response = Response::json(['success_add'=>$add_column->col_id],200);
+                        }else{
+                            $response = Response::json(['error'=>'Something went wrong Adding Column.'],200);
+                        }
+
+                    }else{
+                        $response = Response::json(['error'=>'Something went wrong Adding Column.'],200);
+                    }
+
+            }else{
+                $response = Response::json(['error'=>"Adding of column is open for $sys_term->term only"],200);
+            }
+
+        } catch (Throwable $e) {
+            $response = Response::json(['error'=>'Something went wrong Removing your Import.'.$e->getMessage()],400);
+        }
+
+        return $response;
+
+    }
+
+    public function view_column(Request $request)
+    {
+        try {
+
+            $response = $this->check_request($request);
+
+            if($response != true){
+                return $response;
+            }
+
+            if($request->term == $this->sys_term->term_id){
+
+                $sched_id = $this->decrypt_id($request->id);
+
+                $column = IgradeColumn::where([['sched_id',$sched_id],['type',$request->category],['term',$this->sys_term->term_id]])->get();
+                $import = IgradeImport::where([['sched_id',$sched_id],['category',$request->category]])->count();
+
+                $type = $request->category == 0? 'Class Participation':
+                ($request->category == 1? 'Quiz':
+                ($request->category == 2? 'Others':
+                ($request->category == 3? 'Exam':
+                ($request->category == 6? 'Class Participation':
+                ($request->category == 7? 'Exercise':'Exam')))));
+
+                $category = $this->tab_name($request->category);
+
+                if(count($column) >= 1){
+
+                    $columns = base64_encode(View::make("college.render.modal-column",compact('column','type','import','category'))->render());
+                    $response = Response::json(['success'=>'success','columns'=>$columns],200);
+
+                }elseif(count($column) == 0){
+
+                    $response = Response::json(['empty'=>'Add Column First.'],200);
+
+                }
+
+            }else{
+
+                $response = Response::json(['error'=>'You can only remove column during '.$this->sys_term->term.' only '],200);
+            }
+
+
+        } catch(Throwable $e){
+
+            $response = Response::json(['error'=>'Something went wrong viewing columns. Try again later'.$e->getMessage()],400);
+
+        }
+
+        return $response;
+    }
+
+    public function remove_column(Request $request)
+    {
+
+        try {
+
+            $response = $this->check_request($request);
+
+            if($response != true){
+                return $response;
+            }
+
+            $column_id = $request->id;
+            $clear_column = IgradeColumn::destroy($column_id);
+            $clear_scores = iGradeScores::where('col_id',$column_id)->delete();
+
+            if($clear_column && $clear_scores ){
+                $response = Response::json(['success'=>'success'],200);
+
+            }else{
+                $response = Response::json(['error'=>'Something went wrong removing column'],200);
+            }
+
+        }catch(Throwable $e) {
+            $response = Response::json(['error'=>'Something went wrong removing column'.$e->getMessage()],200);
+        }
+
+        return $response;
     }
 
 

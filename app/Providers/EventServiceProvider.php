@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Events\AddColumn;
 use App\Events\ViewClassRecord;
 use App\Events\ViewFRS;
 use App\Listeners\AddClassRecordGrade;
+use App\Listeners\AddColumnScore;
 use App\Listeners\AddStudentGrade;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -27,6 +29,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         ViewClassRecord::class=>[
             AddClassRecordGrade::class,
+        ],
+        AddColumn::class=>[
+            AddColumnScore::class,
         ]
     ];
 
