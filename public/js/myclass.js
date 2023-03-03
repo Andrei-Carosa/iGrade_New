@@ -222,6 +222,71 @@ var TeacherClass = function(){
 
     var HandleTeacherAction = function(){
 
+        //view frs
+        $(document).on("click", ".manage-class", function(e){
+
+            e.preventDefault();
+            let sched_id = $(this).attr('sched-id');
+
+            if(sched_id == ''){
+                return false;
+            }
+
+            $.ajax({
+                url: 'frs',
+                type: "POST",
+                dataType:'json',
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                cache: false,
+                data: {  id: JSON.stringify(sched_id) },
+                dataType: "json",
+                beforeSend: function () {
+                    KTApp.block('#kt_content', {
+                        overlayColor: '#000000',
+                        state: 'danger',
+                        message: 'Loading your FRS ...'
+                    });
+                    $('#hide-card').hide();
+                    Cookies.set('param1', sched_id)
+                },
+                complete: function () {
+                    KTApp.unblock('#kt_content');
+                    $('.breadcrumb').removeAttr('hidden');
+                    $('.bread-my-class').addClass('text-muted');
+                },
+                success: function (response) {
+                    if (response.success) {
+
+                        $('#title').html('Final Rating Sheet');
+                        $('#display-render').last().append(window.atob(response.frs));
+                        KTDatatablesDataSourceAjaxServer.init();
+
+                    } else if (response.empty) {
+                        Swal.fire({
+                            icon: "info",
+                            text: response.empty,
+                            showCancelButton: false,
+                            confirmButtonText: "Ok, Got it",
+                            reverseButtons: true
+                        }).then(function (result) {
+                            KTUtil.scrollTop();
+                        });
+                    }else{
+                        console.log(response.error)
+                        Swal.fire("Oopps!", "Something went wrong, Please try again later", "warning");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log(xhr);
+                    console.log(status);
+                    console.log(error);
+                    console.log(xhr.responseText);
+                    Swal.fire("Oopps!", "Something went wrong, Please try again later", "error");
+                }
+            })
+
+        });
+
         //back to my class
         $(document).on("click",".back-my-class",function(e){
 
@@ -286,71 +351,6 @@ var TeacherClass = function(){
             ClassRecordTable(sched_id,term,'#kt_tab_pane_1_4');
             ClearTab();
         })
-
-         //view frs
-        $(document).on("click", ".manage-class", function(e){
-
-            e.preventDefault();
-            let sched_id = $(this).attr('sched-id');
-
-            if(sched_id == ''){
-                return false;
-            }
-
-            $.ajax({
-                url: 'frs',
-                type: "POST",
-                dataType:'json',
-                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-                cache: false,
-                data: {  id: JSON.stringify(sched_id) },
-                dataType: "json",
-                beforeSend: function () {
-                    KTApp.block('#kt_content', {
-                        overlayColor: '#000000',
-                        state: 'danger',
-                        message: 'Loading your FRS ...'
-                    });
-                    $('#hide-card').hide();
-                    Cookies.set('param1', sched_id)
-                },
-                complete: function () {
-                    KTApp.unblock('#kt_content');
-                    $('.breadcrumb').removeAttr('hidden');
-                    $('.bread-my-class').addClass('text-muted');
-                },
-                success: function (response) {
-                    if (response.success) {
-
-                        $('#title').html('Final Rating Sheet');
-                        $('#display-render').last().append(window.atob(response.frs));
-                        KTDatatablesDataSourceAjaxServer.init();
-
-                    } else if (response.empty) {
-                        Swal.fire({
-                            icon: "info",
-                            text: response.empty,
-                            showCancelButton: false,
-                            confirmButtonText: "Ok, Got it",
-                            reverseButtons: true
-                        }).then(function (result) {
-                            KTUtil.scrollTop();
-                        });
-                    }else{
-                        console.log(response.error)
-                        Swal.fire("Oopps!", "Something went wrong, Please try again later", "warning");
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.log(xhr);
-                    console.log(status);
-                    console.log(error);
-                    console.log(xhr.responseText);
-                    Swal.fire("Oopps!", "Something went wrong, Please try again later", "error");
-                }
-            })
-
-        });
 
          //set as inc
          $(document).on("click",".btn-inc", function(e){
@@ -858,6 +858,7 @@ var TeacherClass = function(){
             let type = $('li a.nav-type.active').attr('data-nav-type');
             let tab = $('li a.nav-type.active').attr('href');
             let column_id = $(this).attr('col-id');
+            $(this).parent().parent().remove();
 
             $.ajax({
 
@@ -873,7 +874,6 @@ var TeacherClass = function(){
                         state: 'danger',
                         message: 'Loading Please Wait...'
                     });
-                    $(this).parent().parent().remove()
                 },
                 complete: function () {
                     setTimeout(function() {
@@ -917,29 +917,16 @@ var TeacherClass = function(){
             let import_hps = 0;
             let overall_score = 0;
 
-            if(isNaN(hps)){
-                $(this).addClass('border-danger');
-            }
-
-            if(hps == '' || hps == null ){
-                hps = 0;
-            }
-
-            if(!$.isNumeric(hps)){
-                Swal.fire('Oops','Invalid input. Numbers only','info');
-                return false;
-            }
-
             if($(this).hasClass('border-danger')){
                 $(this).removeClass('border-danger');
             }
 
-            //import total hps
-            // $("#grading_table thead tr th .import_hps").each(function() {
-            //     $(this).each(function( index ) {
-            //         import_hps = import_hps+parseInt($(this).val());
-            //     });
-            // });
+            // import total hps
+            $("#grading_table thead .hps-header th .import_hps").each(function() {
+                $(this).each(function( index ) {
+                    import_hps = import_hps+parseInt($(this).val());
+                });
+            });
 
             // column total hps
             $("#grading_table thead .hps-header th .column_hps").each(function() {
@@ -947,7 +934,8 @@ var TeacherClass = function(){
 
                     if (isNaN($(this).val())) {
                         Swal.fire('Oops','Invalid input. Numbers only','info');
-                        $(this).val(0);
+                        $(this).addClass('border-danger');
+                        // $(this).val(0);
                         return false;
                     }
 
@@ -970,27 +958,126 @@ var TeacherClass = function(){
 
             $( e.currentTarget ).closest("thead").find('.total_all_hps').val(column_hps+import_hps);
 
-            // $.ajax({
-            //     url: 'update-column-hps',
-            //     type: "POST",
-            //     dataType:'json',
-            //     contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-            //     cache: false,
-            //     data: {  id: JSON.stringify(col_id),hps:hps },
-            //     success: function (response) {
-            //             if (response.error) {
-            //             Swal.fire("Oopps!",response.error,"info");
-            //         }
-            //     },
-            //     error: function (xhr, status, error) {
-            //         console.log(xhr);
-            //         console.log(status);
-            //         console.log(error);
-            //         console.log(xhr.responseText);
-            //         Swal.fire("Oopps!", "Something went wrong, Please try again later", "info");
+            $.ajax({
+                url: 'update-column-hps',
+                type: "POST",
+                dataType:'json',
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                cache: false,
+                data: {  id: col_id,hps:hps },
+                success: function (response) {
+                    if (response.error) {
+                        Swal.fire("Oopps!",response.error,"info");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log(xhr);
+                    console.log(status);
+                    console.log(error);
+                    console.log(xhr.responseText);
+                    Swal.fire("Oopps!", "Something went wrong, Please try again later", "info");
 
-            //     }
-            // })
+                }
+            })
+
+        });
+
+        //column score
+        $(document).on('click', '#grading_table tbody tr td .column_score', async function(e){
+
+            e.preventDefault();
+            $('#grading_table thead .hps-header th .column_hps').each(function(){
+                $(this).each(function( index ) {
+                    if($(this).val() == 0 || $(this).val() == '' ){
+                        Swal.fire('Oops','Please set the highest possible score in this column','info');
+                        $(this).addClass('border-danger');
+                        return false;
+                    }
+                });
+            })
+        });
+
+         //column score
+         $(document).on('change', '#grading_table tbody tr td .column_score', async function(e){
+
+            e.preventDefault();
+            let score_id = $(this).attr('score-id');
+            let type = $('li a.nav-type.active').attr('data-nav-type');
+
+            let import_score =0;
+            let column_score =0;
+            let updated_total = 0;
+            let calculated_score_2 = 0;
+
+            let score = ($(this).val());
+            let total_score = $( e.currentTarget ).closest("tr").find('.total_score');
+            let calculated_score = $( e.currentTarget ).closest("tr").find('.calculated_total');
+            let total_all_hps =  parseInt($('#grading_table thead .hps-header').find('.total_all_hps').val());
+            let percentage = type==0?0.10:(type==1?0.20:(type==2?0.20:(type==3?0.50:(type==6?0.50:(type==7?0.70:0.20)))));
+
+            $(this).closest("tr").find('.import_score').each(function() {
+                $(this).each(function( index ) {
+                    import_score = import_score+parseInt($(this).val());
+                });
+            });
+
+            $(this).closest("tr").find('.column_score').each(function() {
+                $(this).each(function( index ) {
+
+                    if (isNaN($(this).val())) {
+                        Swal.fire('Oops','Only number is allowed.','info');
+                        $(this).val(0);
+                        return false;
+                    }
+
+                    if($(this).val() != ''){
+                        column_score = column_score+parseInt($(this).val());
+                    }
+
+                });
+            });
+
+            if(import_score !='' || column_score !=''){
+                updated_total = import_score+column_score;
+                calculated_score_2 = ((import_score+column_score) / (total_all_hps)*percentage)*100 ;
+            }else{
+                if(import_score != ''){
+                    updated_total = import_score;
+                    calculated_score_2 = ((import_score) / (total_all_hps)*percentage)*100;
+                }else if(column_score != ''){
+                     updated_total = column_score;
+                     calculated_score_2 = ((column_score) / (total_all_hps)*percentage)*100;
+                }
+            }
+
+            total_score.val(updated_total);
+            calculated_score.val(calculated_score_2.toFixed(0));
+
+            if(score == null || score_id == undefined ){
+                return false;
+            }
+
+            $.ajax({
+                url: 'update-column-score',
+                type: "POST",
+                dataType:'json',
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                cache: false,
+                data: {  id:score_id,score:score },
+                success: function (response) {
+                        if (response.error) {
+                        Swal.fire("Oopps!",response.error,"info");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log(xhr);
+                    console.log(status);
+                    console.log(error);
+                    console.log(xhr.responseText);
+                    Swal.fire("Oopps!", "Something went wrong, Please try again later", "info");
+
+                }
+            })
 
         });
 

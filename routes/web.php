@@ -52,6 +52,9 @@ Route::group(['prefix'=>'college','middleware'=>['auth','isFaculty','PreventBack
     Route::post('/view-column', [DataController::class, 'view_column'])->name('college.view_column');
     Route::post('/add-column', [DataController::class, 'add_column'])->name('college.add_column');
     Route::post('/remove-column', [DataController::class, 'remove_column'])->name('college.remove_column');
+    Route::post('/update-column-hps', [DataController::class, 'update_column_hps'])->name('college.update_column_hps');
+    Route::post('/update-column-score', [DataController::class, 'update_column_score'])->name('college.update_column_score');
+
 
 
 });

@@ -113,11 +113,21 @@ class DataController extends Controller
                 return $response;
             }
 
+            $stud_array = array();
             $sched_id = $this->decrypt_id($request->id);
-            $frs = DB::table('students_grades')->select([
-                'stud_id','prelim','midterm','finals','equivalent','final_grade','remarks','grade_id',
-                DB::raw("(select CONCAT(lname,', ',fname) from students WHERE stud_id = students_grades.stud_id order by lname ASC) as fullname"),
-            ])->where([['sched_id',$sched_id],['ay_id',$this->sys_setting->ay_id],['sem_id',$this->sys_setting->sem_id]]);
+            $schedule = Schedule::find($sched_id,['grades_submit']);
+            $stud_grade = StudentGrade::where([['ay_id',$this->sys_setting->ay_id],['sem_id',$this->sys_setting->sem_id],['sched_id',$sched_id]])->count();
+
+            if($stud_grade == 0 ){
+                $stud_sched = StudentSchedule::where('sched_id',$sched_id)->pluck(['stud_id']);
+
+            }else{
+                $frs = DB::table('students_grades')->select([
+                    'stud_id','prelim','midterm','finals','equivalent','final_grade','remarks','grade_id',
+                    DB::raw("(select CONCAT(lname,', ',fname) from students WHERE stud_id = students_grades.stud_id order by lname ASC) as fullname"),
+                ])->where([['sched_id',$sched_id],['ay_id',$this->sys_setting->ay_id],['sem_id',$this->sys_setting->sem_id]]);
+            }
+
 
             return DataTables::of($frs)
             ->filterColumn('fullname', function($query, $keyword) {
@@ -134,6 +144,64 @@ class DataController extends Controller
         }
 
 
+    }
+
+    public function fetch_frs(Request $request)
+    {
+        try{
+
+            $response = $this->check_request($request);
+
+            if($response != true){
+                return $response;
+            }
+
+            $stud_array = array();
+            $sched_id = $this->decrypt_id($request->id);
+            $schedule = Schedule::find($sched_id,['grades_submit']);
+            $teacher_sched =ScheduleTeacher::where('sched_id',$sched_id)->pluck('type');
+
+            $grade_1 = null;
+            $grade_2 = null;
+
+            $sys_term = iGradeTerm::all(['term_id']);
+
+            $stud_grade = StudentGrade::where([['ay_id',$this->sys_setting->ay_id],['sem_id',$this->sys_setting->sem_id],['sched_id',$sched_id]])->count();
+            $stud_sched = StudentSchedule::where([['sched_id',$sched_id]])->get();
+
+            if($schedule->grades_submit == 0){
+
+                foreach($stud_sched as $stud_scheds){
+
+                    foreach($sys_term as $term){
+
+                        if(count($teacher_sched) > 1){
+
+                            $lec = iGradeLecture::where([['sched_id',$sched_id],['term',$term->term_id]])->get(['stud_id','cp','quiz','others','exam'])->toArray();
+                            $lab = iGradeLab::where([['sched_id',$sched_id],['term',$term->term_id]])->get(['stud_id','cp','exercise','exam'])->toArray();
+
+                            if($lec >=1 && $lab >=1){
+
+                                $lec_filtered = array_keys(array_column($lec, 'stud_id'), $stud_scheds->stud_id);
+                                $lab_filtered = array_keys(array_column($lab, 'stud_id'), $stud_scheds->stud_id);
+                                
+                            }
+
+                        }
+
+                    }
+                }
+
+
+            }elseif($schedule->grades_submit == 1){
+
+            }
+
+
+
+        } catch (Throwable $e){
+
+        }
     }
 
     public function frs_student_inc(Request $request)
@@ -279,6 +347,7 @@ class DataController extends Controller
             $term = $request->term==1?'PRELIM':($request->term==2?'MIDTERM':'FINALS');
 
             $class = Schedule::with('sched_course','sched_blocking.block')->where('sched_id',$sched_id)->first(['sched_id','course_id']);
+
             if($request->sched_type == 0){
                 $grading_sheet = base64_encode(View::make("college.render.card-grading_sheet_lec",compact('class','term'))->render());
             }elseif($request->sched_type ==1){
@@ -354,13 +423,14 @@ class DataController extends Controller
                             if($students->stud_id == $column_score->stud_id){
                                 $score_column["column_$key_column"] = $column_score->score;
                                 $total_column_score = $total_column_score+$score_column["column_$key_column"];
+                                break;
                             }else{
                                 $score_column["column_$key_column"] = 0;
                             }
 
-                            $total_column_hps = $total_column_hps+$column_score->hps;
-
                         }
+
+                        $total_column_hps = $total_column_hps+$columns->hps;
 
                     }
 
@@ -636,5 +706,56 @@ class DataController extends Controller
         return $response;
     }
 
+    public function update_column_hps(Request $request)
+    {
+
+        try {
+
+            $response = $this->check_request($request);
+
+            if($response != true){
+                return $response;
+            }
+
+            $column_id = $request->id;
+            $update = DB::table('igrade_column')->where('col_id',$column_id)->update(['hps'=>$request->hps]);
+
+            if($update){
+                $response = Response::json(['success'=>'success'],200);
+            }
+
+        } catch(Throwable $e){
+            $response = Response::json(['error'=>'Something went wrong update your column HPS.'.$e->getMessage()],400);
+        }
+
+        return $response;
+
+    }
+
+    public function update_column_score(Request $request)
+    {
+
+        try {
+
+            $response = $this->check_request($request);
+
+            if($response != true){
+                return $response;
+            }
+
+            $score_id = $request->id;
+            $update = DB::table('igrade_scores')->where('score_id',$score_id)->update(['score'=>$request->score]);
+
+            if($update){
+                $response = Response::json(['success'=>'success'],200);
+            }
+
+        } catch(Throwable $e){
+            $response = Response::json(['error'=>'Something went wrong updating Students Score.'.$e->getMessage()],400);
+        }
+
+        return $response;
+
+    }
 
 }
